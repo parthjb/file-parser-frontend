@@ -19,3 +19,25 @@ export const uploadFile = async (file) => {
     throw error;
   }
 };
+
+
+export const confirmedMappings = async (file_upload_id, data) => {
+  try {
+    const response = await axios.post(
+      `http://localhost:8000/file-parser/api/upload/${file_upload_id}/confirm-mappings`,
+      JSON.stringify(data),
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error while confirming mappings:", error);
+    throw error;
+  }
+};
+
+
+
