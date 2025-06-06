@@ -1,8 +1,10 @@
 import axios from "axios";
 
-export const uploadFile = async (file) => {
+export const uploadFile = async (file, options = {}) => {
+  const { storageLocation } = options;
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("storageLocation", storageLocation);
   try {
     const response = await axios.post(
       "http://localhost:8000/file-parser/api/upload/",
