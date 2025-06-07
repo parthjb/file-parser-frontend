@@ -1,5 +1,9 @@
 import axios from "axios";
+
 const API_BASE_URL = process.env.REACT_APP_API_URL;
+const LOCAL_API_URL = process.env.REACT_APP_LOCAL_API_URL;
+
+
 export const uploadFile = async (file, options = {}) => {
   const { storageLocation } = options;
   const formData = new FormData();
