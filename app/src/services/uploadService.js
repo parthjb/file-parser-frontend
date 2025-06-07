@@ -1,5 +1,5 @@
 import axios from "axios";
-
+const API_BASE_URL = process.env.REACT_APP_API_URL;
 export const uploadFile = async (file, options = {}) => {
   const { storageLocation } = options;
   const formData = new FormData();
@@ -7,7 +7,7 @@ export const uploadFile = async (file, options = {}) => {
   formData.append("storageLocation", storageLocation);
   try {
     const response = await axios.post(
-      "http://localhost:8000/file-parser/api/upload/",
+      `${API_BASE_URL}/file-parser/api/upload/`,
       formData,
       {
         headers: {
@@ -26,7 +26,7 @@ export const uploadFile = async (file, options = {}) => {
 export const confirmedMappings = async (file_upload_id, data) => {
   try {
     const response = await axios.post(
-      `http://localhost:8000/file-parser/api/upload/${file_upload_id}/confirm-mappings`,
+      `${API_BASE_URL}/file-parser/api/upload/${file_upload_id}/confirm-mappings`,
       JSON.stringify(data),
       {
         headers: {
