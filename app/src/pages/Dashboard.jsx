@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
+  Search,
   Eye,
+  Info,
+  X,
   FileText,
   CheckCircle,
   XCircle,
+  Calendar,
+  Database,
+  AlertCircle,
+  MapPin,
   AlertTriangle,
-  Search,
-  X,
 } from "lucide-react";
 import { dashboardData, getFileData } from "../services/dashboardService";
 
@@ -18,6 +23,8 @@ const Dashboard = () => {
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("invoices");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedFileDetails, setSelectedFileDetails] = useState(null);
 
   const getDashboardData = async () => {
     try {
@@ -35,8 +42,12 @@ const Dashboard = () => {
     getDashboardData();
   }, []);
 
-const filteredFiles = useMemo(() => {
-    if (!apiData || !apiData.recent_uploads || !Array.isArray(apiData.recent_uploads)) {
+  const filteredFiles = useMemo(() => {
+    if (
+      !apiData ||
+      !apiData.recent_uploads ||
+      !Array.isArray(apiData.recent_uploads)
+    ) {
       return [];
     }
 
@@ -45,16 +56,17 @@ const filteredFiles = useMemo(() => {
     }
 
     const searchLower = searchTerm.toLowerCase();
-    return apiData.recent_uploads.filter(file => 
-      file.filename.toLowerCase().includes(searchLower) ||
-      file.status.toLowerCase().includes(searchLower) ||
-      file.file_upload_id.toString().includes(searchLower) ||
-      file.records_processed.toString().includes(searchLower)
+    return apiData.recent_uploads.filter(
+      (file) =>
+        file.filename.toLowerCase().includes(searchLower) ||
+        file.status.toLowerCase().includes(searchLower) ||
+        file.file_upload_id.toString().includes(searchLower) ||
+        file.records_processed.toString().includes(searchLower)
     );
   }, [searchTerm, apiData]);
 
   const clearSearch = () => {
-    setSearchTerm('');
+    setSearchTerm("");
   };
 
   if (dashboardLoading || !apiData) {
@@ -68,10 +80,6 @@ const filteredFiles = useMemo(() => {
     );
   }
 
-  const formatDateTime = (dateString) => {
-    return new Date(dateString).toLocaleString();
-  };
-
   const handleViewFile = async (fileId) => {
     setLoading(true);
     setSelectedFile(fileId);
@@ -81,10 +89,35 @@ const filteredFiles = useMemo(() => {
     setLoading(false);
   };
 
+  const formatDateTime = (dateString) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  const handleDetails = async (fileId) => {
+    const fileDetails = apiData.recent_uploads.find(
+      (file) => file.file_upload_id === fileId
+    );
+    setSelectedFileDetails(fileDetails);
+    setShowDetailsModal(true);
+  };
+
   const closeModal = () => {
     setSelectedFile(null);
     setFileData(null);
     setActiveTab("invoices");
+  };
+
+  const closeDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedFileDetails(null);
   };
 
   const getColumns = (data) => {
@@ -180,12 +213,16 @@ const filteredFiles = useMemo(() => {
 
   const tabs = getTabs();
 
+  const fileName = apiData.recent_uploads.find(
+    (file) => file.file_upload_id === selectedFile
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <h1 className="text-3xl font-semibold text-gray-900">Dashboard</h1>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -242,11 +279,10 @@ const filteredFiles = useMemo(() => {
 
         <div className="bg-white rounded-lg shadow-sm border">
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Uploaded Files
-              </h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Uploaded Files
+            </h2>
 
-            {/* Search Input */}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-gray-400" />
@@ -279,41 +315,41 @@ const filteredFiles = useMemo(() => {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      File ID
+                    <th className="px-6 py-3 text-xxs font-medium text-gray-500 uppercase tracking-wider text-center">
+                      Sr. No.
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-xxs font-medium text-gray-500 uppercase tracking-wider text-center">
                       Filename
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-xxs font-medium text-gray-500 uppercase tracking-wider text-center">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Upload Time
+                    <th className="px-6 py-3 text-xxs font-medium text-gray-500 uppercase tracking-wider text-center">
+                      Storage Location
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-xxs font-medium text-gray-500 uppercase tracking-wider text-center">
                       Records Processed
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-xxs font-medium text-gray-500 uppercase tracking-wider text-center">
                       Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredFiles.map((file) => (
+                  {filteredFiles.map((file, index) => (
                     <tr key={file.file_upload_id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        #{file.file_upload_id}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                        {index + 1}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                         {file.filename}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                         <span
                           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                             file.status === "Completed"
                               ? "bg-green-100 text-green-800"
-                              : file.status === "Processing"
+                              : file.status === "Partial success"
                               ? "bg-yellow-100 text-yellow-800"
                               : "bg-red-100 text-red-800"
                           }`}
@@ -321,19 +357,27 @@ const filteredFiles = useMemo(() => {
                           {file.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDateTime(file.upload_time)}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                        {file.storage_location.charAt(0).toUpperCase() +
+                          file.storage_location.slice(1)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                         {file.records_processed.toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                         <button
                           onClick={() => handleViewFile(file.file_upload_id)}
-                          className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                          className="text-blue-600 hover:text-blue-900 mr-2"
+                          title="View File Data"
                         >
-                          <Eye className="w-4 h-4 mr-1" />
-                          View
+                          <Eye className="w-5 h-5 mr-2" />
+                        </button>
+                        <button
+                          onClick={() => handleDetails(file.file_upload_id)}
+                          className="text-gray-600 hover:text-gray-900"
+                          title="File Details"
+                        >
+                          <FileText className="w-5 h-5 mr-2 text-blue-600" />
                         </button>
                       </td>
                     </tr>
@@ -344,13 +388,189 @@ const filteredFiles = useMemo(() => {
           </div>
         </div>
 
+        {/* File Details Modal */}
+        {showDetailsModal && selectedFileDetails && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-10 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 flex items-center">
+                  <FileText className="w-6 h-6 mr-2 text-blue-600" />
+                  File Details
+                </h3>
+                <button
+                  onClick={closeDetailsModal}
+                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-gray-700 mb-3 flex items-center">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Basic Information
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">File Name:</span>
+                        <span className="font-medium">
+                          {selectedFileDetails.filename}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">File Type:</span>
+                        <span className="font-medium uppercase">
+                          {selectedFileDetails.file_type}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">File Size:</span>
+                        <span className="font-medium">
+                          {formatFileSize(selectedFileDetails.file_size)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Storage:</span>
+                        <span className="font-medium flex items-center">
+                          {selectedFileDetails.storage_location
+                            .charAt(0)
+                            .toUpperCase() +
+                            selectedFileDetails.storage_location.slice(1)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-gray-700 mb-3 flex items-center">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Upload Information
+                    </h4>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Upload Time:</span>
+                      <span className="font-medium">
+                        {formatDateTime(selectedFileDetails.upload_timestamp)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-gray-700 mb-3 flex items-center">
+                      <Database className="w-4 h-4 mr-2" />
+                      Processing Information
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total Records:</span>
+                        <span className="font-medium">
+                          {selectedFileDetails.total_records_found?.toLocaleString() ||
+                            "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">
+                          Successful Records:
+                        </span>
+                        <span className="font-medium text-black">
+                          {selectedFileDetails.records_processed?.toLocaleString() ||
+                            "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Failed Records:</span>
+                        <span className="font-medium text-black">
+                          {selectedFileDetails.failed_records?.toLocaleString() ||
+                            0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-gray-700 mb-3">Status</h4>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Current Status:</span>
+                      <span
+                        className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
+                          selectedFileDetails.status === "Completed"
+                            ? "bg-green-100 text-green-800"
+                            : selectedFileDetails.status === "Partial success"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {selectedFileDetails.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Error Summary */}
+              {selectedFileDetails.error_summary &&
+                selectedFileDetails.error_summary.length > 0 && (
+                  <div className="mt-6 bg-red-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-red-700 mb-3 flex items-center">
+                      <AlertCircle className="w-4 h-4 mr-2" />
+                      Error Summary
+                    </h4>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li className="text-red-600 text-sm">
+                        {selectedFileDetails.error_summary}
+                      </li>
+                    </ul>
+                  </div>
+                )}
+
+              {/* Unmapped Columns */}
+              {selectedFileDetails.unmapped_columns &&
+                selectedFileDetails.unmapped_columns.unmapped_fields &&
+                selectedFileDetails.unmapped_columns.unmapped_fields.length >
+                  0 && (
+                  <div className="mt-6 bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-gray-700 mb-3 flex items-center">
+                      <AlertCircle className="w-4 h-4 mr-2" />
+                      Unmapped Columns
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedFileDetails.unmapped_columns.unmapped_fields.map(
+                        (field, index) => (
+                          <span
+                            key={index}
+                            className="bg-gray-200 text-gray-800 px-2 py-1 rounded text-sm"
+                          >
+                            {field}
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={closeDetailsModal}
+                  className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Modal for file data */}
         {selectedFile && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
             <div className="relative top-10 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  File Data - ID #{selectedFile}
+                  {fileName?.filename}
                 </h3>
                 <button
                   onClick={closeModal}
@@ -384,9 +604,6 @@ const filteredFiles = useMemo(() => {
                             }`}
                           >
                             {tab.label}
-                            <span className="ml-2 bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs">
-                              {tab.count}
-                            </span>
                           </button>
                         ))}
                       </nav>
@@ -441,7 +658,7 @@ const filteredFiles = useMemo(() => {
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={closeModal}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
                 >
                   Close
                 </button>
