@@ -3,7 +3,6 @@ const API_BASE_URL = process.env.REACT_APP_API_URL;
 const LOCAL_API_URL = process.env.REACT_APP_LOCAL_API_URL;
 export const dashboardData = async () => {
   try {
-    console.log("API_BASE_URL:", process.env.REACT_APP_API_URL);
     const response = await axios.get(
       `${API_BASE_URL}/file-parser/api/dashboard/overview`,
       {
